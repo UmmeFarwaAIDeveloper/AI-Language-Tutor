@@ -1,0 +1,317 @@
+{
+  "name": "AI Language Tutor",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi! I'm your AI Language Tutor. I can help you practice conversations, correct your grammar, and improve your language skills. What language would you like to practice today?",
+        "options": {
+          "loadPreviousSession": "memory"
+        }
+      },
+      "id": "713fee82-97f0-4fcb-801b-c3b73b6ca72b",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        592
+      ],
+      "webhookId": "c8082b69-93f6-48da-bced-033c659ef79b"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "20771004-50a8-4d8d-9f5f-25fda5f14c09",
+      "name": "Daily Lesson Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -80,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "farwadev@gmail.com",
+              "value": "<__PLACEHOLDER_VALUE__Student email address__>",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "Spanish ",
+              "value": "<__PLACEHOLDER_VALUE__Target language (e.g., Spanish, French, German)__>",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "beginner",
+              "value": "<__PLACEHOLDER_VALUE__Proficiency level (beginner, intermediate, advanced)__>",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "730945f4-1ad4-4d57-a737-318041b8ae59",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        144,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are an AI Language Tutor Agent.\n\nYour purpose:\nHelp learners practice real-life conversations, correct their grammar and phrasing, and send short daily lessons based on their level and goals.\n\nHow you act:\n- Friendly, patient, and encouraging like a real teacher.\n- Always adapt your replies to the learner’s skill level and target language.\n- Use a polite, conversational tone — never robotic.\n\nResponse format:\nUse clear headings and emojis to keep the message organized:\n🗣 Conversation Practice  \n✍️ Grammar Correction  \n📘 Mini Lesson  \n💡 Example Sentence  \n\nGuidelines:\n- Keep responses concise (under 150 words).  \n- Always reply in the target language unless English is requested.  \n- Never output code, JSON, or system text — only neat, readable tutoring messages.  \n- Encourage learners to respond or try an example at the end.  \n\nYour goal:\nMake every interaction helpful, engaging, and easy to follow — like chatting with a caring tutor.\n",
+        "options": {}
+      },
+      "id": "8645d7b5-f1d3-4c78-9c2f-80fd6d334a94",
+      "name": "Language Tutor Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        272,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "401e4763-af0e-49d7-a9ac-bd88688bc967",
+      "name": "Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        736
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "874YL1j3d16qkfZX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "5060ea79-f3bd-41c3-b498-8e890e7ce999",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "=farwadev@gmail.com",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.lessonContent }}{{ $json.text }}",
+        "options": {}
+      },
+      "id": "a5d870c6-5387-4291-8bc6-159d03a63bdd",
+      "name": "Send Daily Lesson",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        944,
+        1024
+      ],
+      "webhookId": "65a875fc-edf8-44b4-a0e3-ded7261e9fde",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LRqoNSaqhT3K6VSU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a language lesson generator. Create a personalized daily lesson for a {{ $json.proficiencyLevel }} level {{ $json.targetLanguage }} learner.\n\nGenerate a complete lesson with:\n\nTopic/Focus: Choose one grammar point, vocabulary theme, or cultural topic appropriate for {{ $json.proficiencyLevel }} level\n\nLesson Content:\n\nClear explanation (2-3 sentences)\n3-5 example sentences or vocabulary words with translations\nOne cultural insight or practical tip\nPractice Exercise:\n\n3-5 practice questions or fill-in-the-blank exercises\nEncourage active practice\nChallenge:\n\nOne creative challenge to apply the lesson\nFormat the lesson in clean HTML with emojis. Make it engaging, practical, and encouraging. Keep the total length under 400 words.\n\nOutput ONLY the lesson content, no extra text.\nDo NOT include any markdown, code block markers (such as html or ), or any text before or after the HTML. Output only the HTML lesson content.\n\n",
+        "batching": {}
+      },
+      "id": "bae62453-a256-4ffe-ba48-a67697b87194",
+      "name": "Generate Daily Lesson",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        368,
+        1024
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a79728c4-e593-4c77-b076-7b6f979ae313",
+      "name": "Gemini Lesson Generator",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        448,
+        1248
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "874YL1j3d16qkfZX",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "lessonContent",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "emailSubject",
+              "value": "=📚 Your Daily {{ $json.targetLanguage }} Lesson - {{ $now.format(\"MMMM D, YYYY\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "af96519b-d452-4850-87ba-e5b93e66123a",
+      "name": "Update Email Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        720,
+        1024
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Language Tutor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Language Tutor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Language Tutor Agent",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Chat Trigger",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Lesson Schedule": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Generate Daily Lesson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Lesson Generator": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Daily Lesson",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Daily Lesson": {
+      "main": [
+        [
+          {
+            "node": "Update Email Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Email Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Daily Lesson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "16354f55-3b11-4913-9c22-15d26ec80a21",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3f406f51004a0182ea80d7a1cb4074f38211bb43a5013ef1c4c708754af7a35"
+  },
+  "id": "nUWjbWggRNB3IYMu",
+  "tags": []
+}
