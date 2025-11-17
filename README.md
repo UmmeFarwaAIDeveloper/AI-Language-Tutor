@@ -27,3 +27,6 @@ AI Model (Gemini or OpenAI)
 Optional: Google Sheets or Email Integration
 
 Made with ❤️ using n8n automation.
+
+Watch Workflow Demo: [https://drive.google.com/file/d/1woa0mKKvmFAgZt8mwan6DEFXrxcgO9T0/view?usp=drive_link]
+
